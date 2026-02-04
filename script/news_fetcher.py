@@ -1,7 +1,8 @@
-import os
+import streamlit as st
 import requests
+from datetime import datetime
 
-GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
+GNEWS_API_KEY = st.secrets["GNEWS_API_KEY"]
 
 BASE_URL = "https://gnews.io/api/v4/top-headlines"
 
@@ -14,14 +15,11 @@ CATEGORY_MAP = {
     "Politics": "nation",
 }
 
-def fetch_news(category, max_articles=10):
-    if not GNEWS_API_KEY:
-        raise RuntimeError("GNEWS_API_KEY not set")
-
+def fetch_news(category, lang="en", max_articles=10):
     params = {
         "apikey": GNEWS_API_KEY,
         "category": CATEGORY_MAP.get(category, "general"),
-        "lang": "en",
+        "lang": lang,
         "country": "in",
         "max": max_articles,
     }
@@ -36,7 +34,7 @@ def fetch_news(category, max_articles=10):
         articles.append({
             "title": item.get("title"),
             "description": item.get("description"),
-            "content": item.get("content"),  # IMPORTANT
+            "content": item.get("content") or item.get("description"),
             "url": item.get("url"),
             "source": item.get("source", {}).get("name", "GNews"),
             "publishedAt": item.get("publishedAt"),
