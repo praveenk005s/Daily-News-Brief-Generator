@@ -1,6 +1,5 @@
 import os
 import requests
-from datetime import datetime
 
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
 
@@ -17,32 +16,30 @@ CATEGORY_MAP = {
 
 def fetch_news(category, max_articles=10):
     if not GNEWS_API_KEY:
-        return []
+        raise RuntimeError("GNEWS_API_KEY not set")
 
     params = {
         "apikey": GNEWS_API_KEY,
         "category": CATEGORY_MAP.get(category, "general"),
         "lang": "en",
         "country": "in",
-        "max": max_articles
+        "max": max_articles,
     }
 
-    try:
-        response = requests.get(BASE_URL, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-    except Exception:
-        return []
+    response = requests.get(BASE_URL, params=params, timeout=10)
+    response.raise_for_status()
+
+    data = response.json()
 
     articles = []
     for item in data.get("articles", []):
         articles.append({
-            "title": item.get("title", ""),
-            "description": item.get("description", ""),
-            "content": item.get("content", ""),
-            "url": item.get("url", ""),
+            "title": item.get("title"),
+            "description": item.get("description"),
+            "content": item.get("content"),  # IMPORTANT
+            "url": item.get("url"),
             "source": item.get("source", {}).get("name", "GNews"),
-            "publishedAt": item.get("publishedAt", "")
+            "publishedAt": item.get("publishedAt"),
         })
 
     return articles
