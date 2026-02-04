@@ -79,7 +79,13 @@ else:
     for category in categories:
         st.subheader(f"🔹 Your Daily {category} Brief")
 
-        articles = remove_duplicates(fetch_news(category))
+        articles = fetch_news(category)
+        articles = remove_duplicates(articles)
+        
+        if not articles:
+            st.info("No news available for this category.")
+            continue
+
 
         if not articles:
             st.info("No updates available.")
@@ -105,3 +111,4 @@ else:
         sources = sorted({a.get("source", "Unknown") for a in articles})
         st.caption(f"Sources: {', '.join(sources)}")
         st.divider()
+
