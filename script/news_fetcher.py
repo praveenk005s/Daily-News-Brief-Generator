@@ -12,12 +12,12 @@ CATEGORY_MAP = {
     "Sports": "sports",
     "Health": "health",
     "Entertainment": "entertainment",
-    "Politics": "nation"
+    "Politics": "nation",
 }
 
 def fetch_news(category, max_articles=10):
     if not GNEWS_API_KEY:
-        return []   # ✅ SAFE fallback
+        return []
 
     params = {
         "apikey": GNEWS_API_KEY,
@@ -32,7 +32,7 @@ def fetch_news(category, max_articles=10):
         response.raise_for_status()
         data = response.json()
     except Exception:
-        return []   # ✅ SAFE fallback
+        return []
 
     articles = []
     for item in data.get("articles", []):
@@ -42,7 +42,7 @@ def fetch_news(category, max_articles=10):
             "content": item.get("content", ""),
             "url": item.get("url", ""),
             "source": item.get("source", {}).get("name", "GNews"),
-            "publishedAt": item.get("publishedAt", datetime.utcnow().isoformat())
+            "publishedAt": item.get("publishedAt", "")
         })
 
     return articles
