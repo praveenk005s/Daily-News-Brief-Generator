@@ -1,28 +1,38 @@
-from transformers import pipeline
 import streamlit as st
+from transformers import pipeline
 
 @st.cache_resource
 def load_summarizer():
-    return pipeline("text-generation", model="google/flan-t5-base")
+    return pipeline(
+        task="text-generation",
+        model="google/flan-t5-base"
+    )
 
-summarizer = load_summarizer()
+_summarizer = load_summarizer()
 
-def summarize(text, mode="short"):
-    if not text or len(text) < 50:
+def summarize(text: str, mode: str = "short") -> str:
+    if not text or len(text.strip()) < 40:
         return "No significant update available."
 
     if mode == "short":
-        prompt = f"Summarize this news in 1–2 short sentences:\n{text}"
-        max_tokens = 60
+        prompt = (
+            "Summarize the following news in 2–3 concise sentences.\n\n"
+            f"{text}"
+        )
+        max_tokens = 80
     else:
-        prompt = f"Write a clear detailed summary in 5–7 sentences:\n{text}"
-        max_tokens = 160
+        prompt = (
+            "Read the full news carefully and write a detailed summary "
+            "in 5–7 sentences. Do not use bullet points.\n\n"
+            f"{text}"
+        )
+        max_tokens = 180
 
-    result = summarizer(
+    result = _summarizer(
         prompt,
         max_new_tokens=max_tokens,
         do_sample=False,
-        repetition_penalty=2.0,
+        repetition_penalty=1.8,
         truncation=True
     )
 
