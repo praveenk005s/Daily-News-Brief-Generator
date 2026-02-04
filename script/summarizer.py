@@ -1,68 +1,24 @@
-import streamlit as st
 from transformers import pipeline
+import streamlit as st
 
-# ==================================================
-# Load summarizer once
-# ==================================================
 @st.cache_resource
 def load_summarizer():
-    return pipeline(
-        task="text-generation",
-        model="google/flan-t5-base"
-    )
+    return pipeline("text-generation", model="google/flan-t5-base")
 
-_summarizer = load_summarizer()
+summarizer = load_summarizer()
 
-# ==================================================
-# Clean output (remove prompt leakage)
-# ==================================================
-def _clean(text: str) -> str:
-    blacklist = [
-        "read the full news",
-        "write a detailed summary",
-        "do not use bullet points",
-        "make it informative",
-        "summary:",
-        "news:"
-    ]
-
-    lines = []
-    for line in text.splitlines():
-        if not any(bad in line.lower() for bad in blacklist):
-            lines.append(line.strip())
-
-    text = " ".join(lines)
-
-    # Remove duplicate adjacent words
-    words = text.split()
-    cleaned = []
-    for w in words:
-        if not cleaned or w.lower() != cleaned[-1].lower():
-            cleaned.append(w)
-
-    return " ".join(cleaned).strip()
-
-# ==================================================
-# Public summarize function
-# ==================================================
-def summarize(text: str, mode: str = "short") -> str:
-    if not text or len(text.strip()) < 50:
+def summarize(text, mode="short"):
+    if not text or len(text) < 50:
         return "No significant update available."
 
     if mode == "short":
-        prompt = ("News:\n\n"
-            
-            f"{text}"
-        )
-        max_tokens = 80
+        prompt = f"Summarize this news in 1–2 short sentences:\n{text}"
+        max_tokens = 60
     else:
-        prompt = (
-            "News:\n\n"
-            f"{text}"
-        )
-        max_tokens = 200
+        prompt = f"Write a clear detailed summary in 5–7 sentences:\n{text}"
+        max_tokens = 160
 
-    result = _summarizer(
+    result = summarizer(
         prompt,
         max_new_tokens=max_tokens,
         do_sample=False,
@@ -70,4 +26,4 @@ def summarize(text: str, mode: str = "short") -> str:
         truncation=True
     )
 
-    return _clean(result[0]["generated_text"])
+    return result[0]["generated_text"].strip()
