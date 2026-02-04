@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 
 GNEWS_API_KEY = os.getenv("GNEWS_API_KEY")
+
 BASE_URL = "https://gnews.io/api/v4/top-headlines"
 
 CATEGORY_MAP = {
@@ -16,7 +17,7 @@ CATEGORY_MAP = {
 
 def fetch_news(category, max_articles=10):
     if not GNEWS_API_KEY:
-        raise RuntimeError("GNEWS_API_KEY not set")
+        return []   # ✅ SAFE fallback
 
     params = {
         "apikey": GNEWS_API_KEY,
@@ -26,25 +27,22 @@ def fetch_news(category, max_articles=10):
         "max": max_articles
     }
 
-    r = requests.get(BASE_URL, params=params, timeout=10)
-    r.raise_for_status()
-    data = r.json()
+    try:
+        response = requests.get(BASE_URL, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except Exception:
+        return []   # ✅ SAFE fallback
 
     articles = []
     for item in data.get("articles", []):
-        # 🔥 FULL CONTENT LOGIC
-        full_text = " ".join(filter(None, [
-            item.get("title"),
-            item.get("description"),
-            item.get("content")
-        ]))
-
         articles.append({
-            "title": item.get("title"),
-            "content": full_text,
+            "title": item.get("title", ""),
+            "description": item.get("description", ""),
+            "content": item.get("content", ""),
+            "url": item.get("url", ""),
             "source": item.get("source", {}).get("name", "GNews"),
-            "publishedAt": item.get("publishedAt", datetime.utcnow().isoformat()),
-            "url": item.get("url")
+            "publishedAt": item.get("publishedAt", datetime.utcnow().isoformat())
         })
 
     return articles
